@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "studenti"
+version = "0.1.0"
+description = "Mikrostoritev Studenti za sistem prijav na izpite"
+authors = ["you <you@example.com>"]
+packages = [{include = "studenti", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.110.0"
+uvicorn = {extras = ["standard"], version = "^0.27.1"}
+sqlalchemy = "^2.0.27"
+psycopg2-binary = "^2.9.9"
+pydantic = "^2.6.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+httpx = "^0.27.0"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
