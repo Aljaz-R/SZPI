@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - "studenti/**"
+      - ".github/workflows/ci.yml"
   pull_request:
     paths:
       - "studenti/**"
+      - ".github/workflows/ci.yml"
 
 jobs:
   test:
