@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+# src/studenti/api/main.py
 import os
 import logging
 
@@ -18,6 +17,9 @@ app = FastAPI(
 
 @app.on_event("startup")
 def _startup():
+    if os.getenv("SKIP_DB_INIT", "0") == "1":
+        logging.getLogger("studenti").info("SKIP_DB_INIT=1 -> init_db skipped")
+        return
     init_db()
     logging.getLogger("studenti").info("Studenti service started")
 
