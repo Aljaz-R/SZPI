@@ -11,9 +11,8 @@ class StudentiUseCases:
         if not student:
             return {"allowed": False, "reason": "STUDENT_NE_OBSTAJA"}
 
-        # Minimalno pravilo za nalogo: samo AKTIVEN
+       
         if student.status != "AKTIVEN":
             return {"allowed": False, "reason": "NEAKTIVEN_STATUS"}
 
-        # predmet_id za kasneje (pogoji po predmetu)
         return {"allowed": True, "reason": "OK"}
