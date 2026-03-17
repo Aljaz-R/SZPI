@@ -8,4 +8,4 @@ class Student:
     vpisna: str
     ime: str
     priimek: str
-    status: str  # AKTIVEN | NEAKTIVEN
+    status: str  
