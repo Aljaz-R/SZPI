@@ -12,7 +12,7 @@ logging.basicConfig(level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(name)s 
 app = FastAPI(
     title="Studenti API",
     version="1.0.0",
-    description="Mikrostoritev za upravljanje studentov (sistem prijav na izpite).",
+    description="Mikrostoritev za upravljanje studentov.",
 )
 
 @app.on_event("startup")
