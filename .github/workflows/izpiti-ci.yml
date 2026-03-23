@@ -1,0 +1,49 @@
+name: izpiti-ci
+
+on:
+  push:
+    paths:
+      - "izpiti/**"
+      - ".github/workflows/izpiti-ci.yml"
+  pull_request:
+    paths:
+      - "izpiti/**"
+      - ".github/workflows/izpiti-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: izpiti_test
+          POSTGRES_USER: izpiti
+          POSTGRES_PASSWORD: izpiti
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U izpiti -d izpiti_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    defaults:
+      run:
+        working-directory: izpiti
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        env:
+          DATABASE_URL_TEST: postgres://izpiti:izpiti@localhost:5432/izpiti_test
+        run: npm test
