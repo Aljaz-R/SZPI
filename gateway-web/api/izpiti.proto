@@ -1,0 +1,46 @@
+option csharp_namespace = "Izpiti.V1";
+
+syntax = "proto3";
+
+package izpiti.v1;
+
+service IzpitiService {
+  rpc CreateExamTerm(CreateExamTermRequest) returns (ExamTerm);
+  rpc GetExamTerm(GetExamTermRequest) returns (ExamTerm);
+  rpc ListExamTerms(ListExamTermsRequest) returns (ListExamTermsResponse);
+}
+
+message ExamTerm {
+  int64 id = 1;
+  string predmet_id = 2;
+  string datum_cas = 3;   // RFC3339
+  string lokacija = 4;
+  string prijave_od = 5;  // RFC3339
+  string prijave_do = 6;  // RFC3339
+  int32 kapaciteta = 7;
+}
+
+message CreateExamTermRequest {
+  string predmet_id = 1;
+  string datum_cas = 2;
+  string lokacija = 3;
+  string prijave_od = 4;
+  string prijave_do = 5;
+  int32 kapaciteta = 6;
+}
+
+message GetExamTermRequest {
+  int64 id = 1;
+}
+
+message ListExamTermsRequest {
+  string predmet_id = 1; // optional
+  string od = 2;         // optional RFC3339
+  string do = 3;         // optional RFC3339
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message ListExamTermsResponse {
+  repeated ExamTerm terms = 1;
+}

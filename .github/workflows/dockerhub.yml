@@ -1,0 +1,42 @@
+name: dockerhub-build-push
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: studenti
+            context: ./studenti
+          - name: izpiti
+            context: ./izpiti
+          - name: gateway-web
+            context: ./gateway-web
+          - name: gateway-mobile
+            context: ./gateway-mobile
+          - name: web-shell
+            context: ./web/shell
+          - name: mf-studenti
+            context: ./web/mf-studenti
+          - name: mf-izpiti
+            context: ./web/mf-izpiti
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:sha-${{ github.sha }}

@@ -1,0 +1,118 @@
+services:
+  # --- STUDENTI (MS1) ---
+  studenti-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: studenti
+      POSTGRES_USER: studenti
+      POSTGRES_PASSWORD: studenti
+    ports:
+      - "5433:5432"
+    volumes:
+      - studenti_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studenti -d studenti"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  studenti-api:
+    build: ./studenti
+    environment:
+      DATABASE_URL: postgresql+psycopg2://studenti:studenti@studenti-db:5432/studenti
+      LOG_LEVEL: INFO
+    depends_on:
+      studenti-db:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+
+  # --- IZPITI (MS2) ---
+  izpiti-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: izpiti
+      POSTGRES_USER: izpiti
+      POSTGRES_PASSWORD: izpiti
+    ports:
+      - "5434:5432"
+    volumes:
+      - izpiti_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U izpiti -d izpiti"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+
+  izpiti-grpc:
+    build: ./izpiti
+    environment:
+      DATABASE_URL: postgres://izpiti:izpiti@izpiti-db:5432/izpiti
+      GRPC_PORT: "50051"
+    depends_on:
+      izpiti-db:
+        condition: service_healthy
+    ports:
+      - "50051:50051"
+
+  # --- API GATEWAY (WEB) ---
+  gateway-web:
+    build: ./gateway-web
+    environment:
+      PORT: "8080"
+      STUDENTI_BASE_URL: http://studenti-api:8000
+      IZPITI_GRPC_ADDR: izpiti-grpc:50051
+      LOG_LEVEL: info
+    depends_on:
+      studenti-api:
+        condition: service_started
+      izpiti-grpc:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+  # --- MICRO-FRONTENDS ---
+  mf-studenti:
+    build: ./web/mf-studenti
+    ports:
+      - "8081:80"
+    depends_on:
+      gateway-web:
+        condition: service_started
+
+  mf-izpiti:
+    build: ./web/mf-izpiti
+    ports:
+      - "8082:80"
+    depends_on:
+      gateway-web:
+        condition: service_started
+
+  web-shell:
+    build: ./web/shell
+    ports:
+      - "8088:80"
+    depends_on:
+      mf-studenti:
+        condition: service_started
+      mf-izpiti:
+        condition: service_started
+      gateway-web:
+        condition: service_started
+
+  gateway-mobile:
+    build: ./gateway-mobile
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8085
+      STUDENTI_BASE_URL: http://studenti-api:8000
+      IZPITI_GRPC_ADDR: http://izpiti-grpc:50051
+      DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2UNENCRYPTEDSUPPORT: "true"
+    depends_on:
+      - studenti-api
+      - izpiti-grpc
+    ports:
+      - "8085:8085"
+
+volumes:
+  studenti_db:
+  izpiti_db:
