@@ -24,6 +24,8 @@ jobs:
             context: ./web/mf-studenti
           - name: mf-izpiti
             context: ./web/mf-izpiti
+          - name: dogodki
+            context: ./dogodki  
 
     steps:
       - uses: actions/checkout@v4

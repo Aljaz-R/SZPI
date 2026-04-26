@@ -113,6 +113,45 @@ services:
     ports:
       - "8085:8085"
 
+  artemis:
+    image: apache/activemq-artemis:2.38.0
+    environment:
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+    ports:
+      - "61616:61616"  # JMS
+      - "8161:8161"    # web console
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8161/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  dogodki-db:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - dogodki_db:/data/db
+
+  dogodki-api:
+    build: ./dogodki
+    environment:
+      MONGODB_URI: mongodb://root:root@dogodki-db:27017/dogodki?authSource=admin
+      ARTEMIS_URL: tcp://artemis:61616
+      ARTEMIS_USER: admin
+      ARTEMIS_PASSWORD: admin
+      DOGODKI_QUEUE: events.v1
+    depends_on:
+      - artemis
+      - dogodki-db
+    ports:
+      - "8090:8090"
+
 volumes:
   studenti_db:
   izpiti_db:
+  dogodki_db:
