@@ -1,53 +1,51 @@
-package si.itarhitekture.dogodki.messaging;
+package si.itarhitekture.dogodki.domain;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jms.annotation.JmsListener;
-import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.Map;
 
-import si.itarhitekture.dogodki.domain.EventDocument;
-import si.itarhitekture.dogodki.infra.EventRepository;
+@Document("events")
+public class EventDocument {
 
-@Component
-public class JmsConsumer {
+  @Id
+  private String id;
 
-  private static final Logger log = LoggerFactory.getLogger(JmsConsumer.class);
+  @Indexed(unique = true)
+  private String eventId;
 
-  private final ObjectMapper mapper;
-  private final EventRepository repo;
+  private EventType type;
+  private String source;
+  private Map<String, Object> payload;
+  private Instant createdAt;
 
-  public JmsConsumer(ObjectMapper mapper, EventRepository repo) {
-    this.mapper = mapper;
-    this.repo = repo;
+  public EventDocument() {}
+
+  public EventDocument(String eventId, EventType type, String source, Map<String, Object> payload, Instant createdAt) {
+    this.eventId = eventId;
+    this.type = type;
+    this.source = source;
+    this.payload = payload;
+    this.createdAt = createdAt;
   }
 
-  @JmsListener(destination = "${dogodki.queue:events.v1}")
-  public void onMessage(String raw) {
-    try {
-      EventEnvelope env = mapper.readValue(raw, EventEnvelope.class);
+  public String getId() { return id; }
+  public void setId(String id) { this.id = id; }
 
-      EventDocument doc = new EventDocument();
-      doc.setEventId(env.getEventId());
-      doc.setType(env.getType());
-      doc.setSource(env.getSource());
-      doc.setPayload(env.getPayload());
-      doc.setCreatedAt(Instant.now());
+  public String getEventId() { return eventId; }
+  public void setEventId(String eventId) { this.eventId = eventId; }
 
-      repo.save(doc)
-          .doOnSuccess(saved -> log.info("Saved eventId={}", saved.getEventId()))
-          .onErrorResume(DuplicateKeyException.class, e -> {
-            log.info("Duplicate eventId={} -> ignore", doc.getEventId());
-            return Mono.empty();
-          })
-          .subscribe();
+  public EventType getType() { return type; }
+  public void setType(EventType type) { this.type = type; }
 
-    } catch (Exception e) {
-      log.error("Failed to process message", e);
-    }
-  }
+  public String getSource() { return source; }
+  public void setSource(String source) { this.source = source; }
+
+  public Map<String, Object> getPayload() { return payload; }
+  public void setPayload(Map<String, Object> payload) { this.payload = payload; }
+
+  public Instant getCreatedAt() { return createdAt; }
+  public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
