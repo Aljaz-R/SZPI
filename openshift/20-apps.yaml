@@ -1,1 +1,309 @@
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: studenti-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: studenti-api }
+  template:
+    metadata:
+      labels: { app: studenti-api }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/studenti:latest
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              value: postgresql+psycopg2://studenti:studenti@postgres-studenti:5432/studenti
+            - name: LOG_LEVEL
+              value: INFO
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet: { path: /openapi.json, port: 8000 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /openapi.json, port: 8000 }
+            initialDelaySeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: studenti-api
+spec:
+  selector: { app: studenti-api }
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: izpiti-grpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: izpiti-grpc }
+  template:
+    metadata:
+      labels: { app: izpiti-grpc }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/izpiti:latest
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              value: postgres://izpiti:izpiti@postgres-izpiti:5432/izpiti
+            - name: GRPC_PORT
+              value: "50051"
+          ports:
+            - containerPort: 50051
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: izpiti-grpc
+spec:
+  selector: { app: izpiti-grpc }
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dogodki-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: dogodki-api }
+  template:
+    metadata:
+      labels: { app: dogodki-api }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/dogodki:latest
+          imagePullPolicy: Always
+          env:
+            - name: MONGODB_URI
+              value: mongodb://root:root@mongo-dogodki:27017/dogodki?authSource=admin
+            - name: ARTEMIS_URL
+              value: tcp://artemis:61616
+            - name: ARTEMIS_USER
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: ARTEMIS_USER }
+            - name: ARTEMIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: ARTEMIS_PASS }
+            - name: DOGODKI_QUEUE
+              valueFrom:
+                configMapKeyRef: { name: app-config, key: DOGODKI_QUEUE }
+          ports:
+            - containerPort: 8090
+          readinessProbe:
+            httpGet: { path: /api/v1/health, port: 8090 }
+            initialDelaySeconds: 20
+          livenessProbe:
+            httpGet: { path: /api/v1/health, port: 8090 }
+            initialDelaySeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dogodki-api
+spec:
+  selector: { app: dogodki-api }
+  ports:
+    - name: http
+      port: 8090
+      targetPort: 8090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gateway-web }
+  template:
+    metadata:
+      labels: { app: gateway-web }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/gateway-web:latest
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: "8080"
+            - name: STUDENTI_BASE_URL
+              value: http://studenti-api:8000
+            - name: IZPITI_GRPC_ADDR
+              value: izpiti-grpc:50051
+            - name: LOG_LEVEL
+              value: info
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            httpGet: { path: /web/health, port: 8080 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /web/health, port: 8080 }
+            initialDelaySeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-web
+spec:
+  selector: { app: gateway-web }
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-mobile
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: gateway-mobile }
+  template:
+    metadata:
+      labels: { app: gateway-mobile }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/gateway-mobile:latest
+          imagePullPolicy: Always
+          env:
+            - name: ASPNETCORE_URLS
+              value: http://0.0.0.0:8085
+            - name: STUDENTI_BASE_URL
+              value: http://studenti-api:8000
+            - name: IZPITI_GRPC_ADDR
+              value: http://izpiti-grpc:50051
+            - name: DOTNET_SYSTEM_NET_HTTP_SOCKETSHTTPHANDLER_HTTP2UNENCRYPTEDSUPPORT
+              value: "true"
+          ports:
+            - containerPort: 8085
+          readinessProbe:
+            httpGet: { path: /m/health, port: 8085 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /m/health, port: 8085 }
+            initialDelaySeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-mobile
+spec:
+  selector: { app: gateway-mobile }
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mf-studenti
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mf-studenti }
+  template:
+    metadata:
+      labels: { app: mf-studenti }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/mf-studenti:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mf-studenti
+spec:
+  selector: { app: mf-studenti }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mf-izpiti
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mf-izpiti }
+  template:
+    metadata:
+      labels: { app: mf-izpiti }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/mf-izpiti:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mf-izpiti
+spec:
+  selector: { app: mf-izpiti }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-shell
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: web-shell }
+  template:
+    metadata:
+      labels: { app: web-shell }
+    spec:
+      containers:
+        - name: app
+          image: docker.io/DOCKERHUB_USER/web-shell:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-shell
+spec:
+  selector: { app: web-shell }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
