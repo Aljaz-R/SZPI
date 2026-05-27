@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/studenti:latest
+          image: docker.io/rant28/studenti:latest
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL
@@ -54,7 +54,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/izpiti:latest
+          image: docker.io/rant28/izpiti:latest
           imagePullPolicy: Always
           env:
             - name: DATABASE_URL
@@ -89,7 +89,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/dogodki:latest
+          image: docker.io/rant28/dogodki:latest
           imagePullPolicy: Always
           env:
             - name: MONGODB_URI
@@ -139,7 +139,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/gateway-web:latest
+          image: docker.io/rant28/gateway-web:latest
           imagePullPolicy: Always
           env:
             - name: PORT
@@ -184,7 +184,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/gateway-mobile:latest
+          image: docker.io/rant28/gateway-mobile:latest
           imagePullPolicy: Always
           env:
             - name: ASPNETCORE_URLS
@@ -229,7 +229,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/mf-studenti:latest
+          image: docker.io/rant28/mf-studenti:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -259,7 +259,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/mf-izpiti:latest
+          image: docker.io/rant28/mf-izpiti:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -289,7 +289,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: docker.io/DOCKERHUB_USER/web-shell:latest
+          image: docker.io/rant28/web-shell:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
