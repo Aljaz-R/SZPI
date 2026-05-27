@@ -12,6 +12,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://root:root@localhost:27017/dogodki?authSource=admin}
+      auto-index-creation: true
 
   artemis:
     mode: native

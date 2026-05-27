@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.Map;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 @Document("events")
 public class EventDocument {
@@ -36,4 +37,7 @@ public class EventDocument {
   public void setSource(String source) { this.source = source; }
   public void setPayload(Map<String, Object> payload) { this.payload = payload; }
   public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+  @Indexed(unique = true)
+private String eventId;
 }

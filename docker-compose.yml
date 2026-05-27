@@ -119,7 +119,7 @@ services:
       ARTEMIS_USER: admin
       ARTEMIS_PASSWORD: admin
     ports:
-      - "61616:61616"  # JMS
+      - "8161:8161"  # JMS
       - "8161:8161"    # web console
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8161/ || exit 1"]

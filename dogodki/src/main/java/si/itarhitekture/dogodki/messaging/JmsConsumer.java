@@ -30,8 +30,15 @@ public class JmsConsumer {
       EventDocument doc = new EventDocument(env.type(), env.source(), env.payload(), Instant.now());
 
       service.save(doc)
-        .doOnSuccess(saved -> log.info("event saved id={} type={}", saved.getId(), saved.getType()))
-        .doOnError(e -> log.error("failed to save event", e))
+        .doOnSuccess(saved -> log.info("event saved id={} eventId={} type={}", saved.getId(), saved.getEventId(), saved.getType()))
+        .onErrorResume(e -> {
+          // duplicate key -> ignore
+          if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+            log.warn("duplicate event ignored eventId={}", doc.getEventId());
+            return Mono.empty();
+          }
+          return Mono.error(e);
+        })
         .subscribeOn(Schedulers.boundedElastic())
         .subscribe();
 
