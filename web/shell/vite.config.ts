@@ -8,8 +8,8 @@ export default defineConfig({
     federation({
       name: "shell",
       remotes: {
-        mfStudenti: "http://localhost:8081/assets/remoteEntry.js",
-        mfIzpiti: "http://localhost:8082/assets/remoteEntry.js",
+        mfStudenti: "/mf-studenti/assets/remoteEntry.js",
+        mfIzpiti: "/mf-izpiti/assets/remoteEntry.js",
       },
       shared: ["react", "react-dom", "react-router-dom"],
     }),
