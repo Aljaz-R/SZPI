@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const API = "http://localhost:8080";
+const API = "/api";
 
 export default function IzpitiApp() {
   const [out, setOut] = useState<any>(null);
