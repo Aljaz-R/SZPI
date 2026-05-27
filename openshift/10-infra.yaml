@@ -1,1 +1,201 @@
-
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: studenti-db-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: izpiti-db-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dogodki-mongo-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-studenti
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres-studenti }
+  template:
+    metadata:
+      labels: { app: postgres-studenti }
+    spec:
+      containers:
+        - name: postgres
+          image: bitnami/postgresql:16
+          env:
+            - name: POSTGRESQL_DATABASE
+              value: studenti
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: STUDENTI_DB_USER }
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: STUDENTI_DB_PASS }
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/postgresql
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: studenti-db-pvc }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-studenti
+spec:
+  selector: { app: postgres-studenti }
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-izpiti
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres-izpiti }
+  template:
+    metadata:
+      labels: { app: postgres-izpiti }
+    spec:
+      containers:
+        - name: postgres
+          image: bitnami/postgresql:16
+          env:
+            - name: POSTGRESQL_DATABASE
+              value: izpiti
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: IZPITI_DB_USER }
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: IZPITI_DB_PASS }
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/postgresql
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: izpiti-db-pvc }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-izpiti
+spec:
+  selector: { app: postgres-izpiti }
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-dogodki
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: mongo-dogodki }
+  template:
+    metadata:
+      labels: { app: mongo-dogodki }
+    spec:
+      containers:
+        - name: mongo
+          image: bitnami/mongodb:7
+          env:
+            - name: MONGODB_ROOT_USER
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: MONGO_ROOT_USER }
+            - name: MONGODB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: MONGO_ROOT_PASS }
+            - name: MONGODB_DATABASE
+              value: dogodki
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/mongodb
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: dogodki-mongo-pvc }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-dogodki
+spec:
+  selector: { app: mongo-dogodki }
+  ports:
+    - name: mongo
+      port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: artemis
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: artemis }
+  template:
+    metadata:
+      labels: { app: artemis }
+    spec:
+      containers:
+        - name: artemis
+          image: apache/activemq-artemis:2.38.0
+          env:
+            - name: ARTEMIS_USER
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: ARTEMIS_USER }
+            - name: ARTEMIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-secrets, key: ARTEMIS_PASS }
+          ports:
+            - containerPort: 61616
+            - containerPort: 8161
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: artemis
+spec:
+  selector: { app: artemis }
+  ports:
+    - name: jms
+      port: 61616
+      targetPort: 61616
+    - name: console
+      port: 8161
+      targetPort: 8161
