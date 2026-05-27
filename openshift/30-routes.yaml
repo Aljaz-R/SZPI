@@ -1,1 +1,40 @@
 
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: web
+spec:
+  to: { kind: Service, name: web-shell }
+  port: { targetPort: http }
+  tls:
+    termination: edge
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: bff-web
+spec:
+  to: { kind: Service, name: gateway-web }
+  port: { targetPort: http }
+  tls:
+    termination: edge
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: bff-mobile
+spec:
+  to: { kind: Service, name: gateway-mobile }
+  port: { targetPort: http }
+  tls:
+    termination: edge
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: dogodki
+spec:
+  to: { kind: Service, name: dogodki-api }
+  port: { targetPort: http }
+  tls:
+    termination: edge
