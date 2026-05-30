@@ -5,7 +5,7 @@ RUN mvn -q -DskipTests dependency:go-offline
 COPY src ./src
 RUN mvn -q -DskipTests package
 
-FROM public.ecr.aws/docker/library/eclipse-temurin:21-jre
+FROM public.ecr.aws/docker/library/eclipse-temurin:21-jre 
 WORKDIR /app
 COPY --from=build /app/target/dogodki-0.1.0.jar app.jar
 EXPOSE 8090
