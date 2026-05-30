@@ -1,1 +1,82 @@
-
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-studenti-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres-studenti
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: studenti-api
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-izpiti-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres-izpiti
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: izpiti-grpc
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mongo-dogodki-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: mongo-dogodki
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: dogodki-api
+      ports:
+        - protocol: TCP
+          port: 27017
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: artemis-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: artemis
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: dogodki-api
+      ports:
+        - protocol: TCP
+          port: 61616
+    - from:
+        - podSelector:
+            matchLabels:
+              app: dogodki-api
+      ports:
+        - protocol: TCP
+          port: 8161
